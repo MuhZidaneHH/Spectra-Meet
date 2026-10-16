@@ -1,0 +1,13 @@
+# Samakan akhir baris agar tidak ada diff palsu antara laptop Windows
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# Berkas biner
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+*.mp3 binary
+*.wav binary
+*.m4a binary
