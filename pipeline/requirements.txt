@@ -1,0 +1,6 @@
+whisperx==3.8.6
+pydantic-settings==2.16.0
+google-genai==2.31.0
+
+# Pengujian
+pytest==9.1.1

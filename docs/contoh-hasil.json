@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "language": "id",
+  "duration": 312.4,
+  "segments": [
+    {"start": 0.4, "end": 7.9, "speaker": "SPEAKER_00", "text": "Baik, kita mulai. Agenda hari ini soal jadwal rilis versi pertama."},
+    {"start": 8.3, "end": 15.2, "speaker": "SPEAKER_01", "text": "Dari sisi backend sudah siap, tinggal uji upload file besar."},
+    {"start": 15.8, "end": 24.6, "speaker": "SPEAKER_02", "text": "Untuk tampilan hasil masih ada dua bug kecil, tapi bisa beres sebelum Jumat."},
+    {"start": 25.1, "end": 33.0, "speaker": "SPEAKER_00", "text": "Oke, kalau begitu kita putuskan rilis internal hari Jumat."},
+    {"start": 33.4, "end": 41.7, "speaker": "SPEAKER_01", "text": "Saya yang siapkan catatan rilisnya, selesai Kamis sore."},
+    {"start": 42.2, "end": 49.8, "speaker": "SPEAKER_00", "text": "Satu lagi, apakah kita perlu batas ukuran file yang lebih kecil?"},
+    {"start": 50.3, "end": 56.1, "speaker": "SPEAKER_02", "text": "Belum tahu, kita lihat dulu hasil uji nanti."}
+  ],
+  "summary_status": "ok",
+  "summary_error": null,
+  "summary": "Tim membahas kesiapan rilis versi pertama. Backend sudah siap dan tampilan hasil tinggal dua bug kecil. Rilis internal diputuskan hari Jumat, dengan catatan rilis disiapkan sebelumnya.",
+  "decisions": [
+    "Rilis internal dilakukan hari Jumat"
+  ],
+  "tasks": [
+    {"description": "Menyiapkan catatan rilis", "owner": "SPEAKER_01", "due": "Kamis sore"},
+    {"description": "Memperbaiki dua bug kecil pada tampilan hasil", "owner": null, "due": "Sebelum Jumat"}
+  ],
+  "open_questions": [
+    "Apakah batas ukuran file unggahan perlu diperkecil?"
+  ]
+}
