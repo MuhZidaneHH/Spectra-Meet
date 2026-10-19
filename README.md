@@ -33,7 +33,7 @@ Semua pengaturan (port, kunci API, model, folder data, batas unggahan) ada di **
 2. Isi nilai yang kosong. Setiap variabel dijelaskan di `.env.example`: siapa yang memakainya, cara mendapatkan nilainya, dan apakah wajib.
 3. **Restart aplikasi** setelah mengubah `.env`. Perubahan tidak berlaku sebelum restart.
 
-Selama `USE_MOCK_PIPELINE=true` (bawaan), aplikasi memakai data contoh dan tidak butuh kunci apa pun.
+Selama `USE_MOCK_PIPELINE=true` (bawaan), aplikasi memakai pipeline tiruan (`api/dev/mock_pipeline.py`, hasil dari `docs/contoh-hasil.json`) dan tidak butuh kunci apa pun.
 
 Kunci yang dibutuhkan pipeline asli:
 
@@ -146,8 +146,7 @@ Secara manual: `npm run build` lalu `npm start` di folder `web`, dan `python -m 
 # Tes API (dari folder api)
 .\.venv\Scripts\python.exe -m pytest
 
-# Perbarui tipe web setelah mengubah api/app/schemas.py (API harus berjalan)
-cd web; npm run gen:types
+# Tipe web ada di web/src/lib/types.ts. Ubah bersama api/app/schemas.py dan api/app/contract.py.
 
 # Lint dan build web
 npm run lint; npm run build
@@ -159,8 +158,7 @@ npm run lint; npm run build
 # Tes API (dari folder api)
 .venv/bin/python -m pytest
 
-# Perbarui tipe web setelah mengubah api/app/schemas.py (API harus berjalan)
-cd web && npm run gen:types
+# Tipe web ada di web/src/lib/types.ts. Ubah bersama api/app/schemas.py dan api/app/contract.py.
 
 # Lint dan build web
 npm run lint && npm run build
@@ -170,7 +168,7 @@ npm run lint && npm run build
 
 Setelah `git clone` dan pemasangan di atas, dengan `.env` bawaan (pipeline tiruan):
 
-1. `pytest` di folder `api` berakhir hijau semua (17 tes lulus).
+1. `pytest` di folder `api` berakhir hijau semua (27 tes lulus).
 2. `npm run lint` dan `npm run build` di folder `web` selesai tanpa galat.
 3. `npm run dev` (atau `npm start`), lalu buka alamat yang ditampilkan: chip di header berbunyi **"Mesin siap · Pipeline tiruan"**.
 4. Unggah file audio apa pun, klik Proses: kelima langkah berjalan dan selesai dalam sekitar 10 detik, lalu "Lihat hasil" menampilkan ringkasan dan transkrip contoh.
@@ -180,4 +178,4 @@ Bila ada yang gagal, klik chip status mesin di header: panel itu menyebut apa ya
 
 ## Pipeline (Dev 2)
 
-_Menunggu Dev 2: setup FFmpeg (Windows dan Linux), venv pipeline, dan cara menjalankan. API mencari Python pipeline di `pipeline/.venv/Scripts/python.exe` (Windows) atau `pipeline/.venv/bin/python` (Linux) kecuali `PIPELINE_PYTHON` di `.env` diisi._
+_Menunggu Dev 2 (kode pipeline sudah ada di `pipeline/`, tetapi langkah pemasangan belum ditulis): setup FFmpeg (Windows dan Linux), venv pipeline, dan cara menjalankan. API mencari Python pipeline di `pipeline/.venv/Scripts/python.exe` (Windows) atau `pipeline/.venv/bin/python` (Linux) kecuali `PIPELINE_PYTHON` di `.env` diisi._

@@ -1,0 +1,13 @@
+{
+  "name": "spectrameet",
+  "private": true,
+  "description": "SpectraMeet MVP 1. Skrip pembantu untuk memasang dan menjalankan API + web dengan satu perintah.",
+  "scripts": {
+    "setup": "node scripts/spectrameet.mjs setup",
+    "dev": "node scripts/spectrameet.mjs dev",
+    "start": "node scripts/spectrameet.mjs start"
+  },
+  "engines": {
+    "node": ">=20.9"
+  }
+}

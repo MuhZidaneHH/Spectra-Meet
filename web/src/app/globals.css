@@ -1,5 +1,145 @@
 @import "tailwindcss";
 
+/* Token warna mengikuti desain UI (SpectraMeet-MVP1-UI.html). Gelap otomatis mengikuti
+   sistem, dan bisa dipaksa lewat atribut data-theme di <html> (ThemeToggle). */
+:root {
+  --bg: #f7f6fd;
+  --surface: #ffffff;
+  --surface-2: #f1effb;
+  --ink: #14122b;
+  --muted: #6b6890;
+  --line: #e4e1f3;
+  --brand: #6c4dff;
+  --brand-fg: #ffffff;
+  --brand-soft: #ece8ff;
+  --cyan: #0ea5c0;
+  --good: #12a36b;
+  --good-soft: #ddf5ea;
+  --warn: #b57a00;
+  --warn-soft: #fff1cc;
+  --bad: #d6343a;
+  --bad-soft: #ffe3e4;
+  --sp-0: #6c4dff;
+  --sp-1: #0ea5c0;
+  --sp-2: #e8803a;
+  --shadow: 0 1px 2px rgba(20, 18, 43, 0.05), 0 8px 24px rgba(20, 18, 43, 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d0b1f;
+    --surface: #17142f;
+    --surface-2: #1f1b3d;
+    --ink: #f1efff;
+    --muted: #a29ec8;
+    --line: #2b2750;
+    --brand: #8f7bff;
+    --brand-fg: #0d0b1f;
+    --brand-soft: #272050;
+    --cyan: #35c6de;
+    --good: #3dd598;
+    --good-soft: #12382c;
+    --warn: #f2c14e;
+    --warn-soft: #3a2f10;
+    --bad: #ff7075;
+    --bad-soft: #3e1a1d;
+    --sp-0: #9a89ff;
+    --sp-1: #35c6de;
+    --sp-2: #f29b62;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d0b1f;
+  --surface: #17142f;
+  --surface-2: #1f1b3d;
+  --ink: #f1efff;
+  --muted: #a29ec8;
+  --line: #2b2750;
+  --brand: #8f7bff;
+  --brand-fg: #0d0b1f;
+  --brand-soft: #272050;
+  --cyan: #35c6de;
+  --good: #3dd598;
+  --good-soft: #12382c;
+  --warn: #f2c14e;
+  --warn-soft: #3a2f10;
+  --bad: #ff7075;
+  --bad-soft: #3e1a1d;
+  --sp-0: #9a89ff;
+  --sp-1: #35c6de;
+  --sp-2: #f29b62;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@theme inline {
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-fg: var(--brand-fg);
+  --color-brand-soft: var(--brand-soft);
+  --color-cyan: var(--cyan);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --shadow-card: var(--shadow);
+}
+
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    height: 6px;
+  }
+  50% {
+    height: 28px;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

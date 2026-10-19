@@ -37,7 +37,6 @@ class Settings(BaseSettings):
 
     # Umum
     api_port: int = 8000
-    web_port: int = 3000
     data_dir: str = "data"
 
     # Unggahan
@@ -52,7 +51,6 @@ class Settings(BaseSettings):
     mock_fail_at_step: int = 0  # hanya pipeline tiruan; 0 = tidak gagal
 
     # LLM dan suara ke teks (dibaca pipeline, diperiksa di sini untuk status)
-    llm_provider: str = "google"
     llm_api_key: str = ""
     llm_model: str = ""
     hf_token: str = ""
@@ -63,6 +61,10 @@ class Settings(BaseSettings):
     def data_path(self) -> Path:
         path = Path(self.data_dir)
         return path if path.is_absolute() else REPO_ROOT / path
+
+    @property
+    def results_dir(self) -> Path:
+        return self.data_path / "hasil"
 
     @property
     def extensions(self) -> list[str]:

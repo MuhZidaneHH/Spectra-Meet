@@ -1,124 +1,111 @@
-# Kontrak JSON pipeline
+# Kontrak JSON SpectraMeet MVP 1
 
-**Status: DRAF dari Dev 2, menunggu persetujuan PM dan Dev 1.** Sumber kebenarannya adalah model Pydantic di `pipeline/spectrameet_pipeline/schema.py`. Bila dokumen ini berbeda dengan kode, kodelah yang benar. Contoh lengkap: `docs/contoh-hasil.json`.
+**Versi skema:** `1.0`
+**Status:** usulan final dari PM, **menunggu persetujuan Dev 1 dan Dev 2** (tanda tangan di bagian bawah).
+**Contoh lengkap:** [`contoh-hasil.json`](contoh-hasil.json)
 
-Pipeline dijalankan sebagai proses terpisah dan berbicara dengan API lewat dua berkas di `data/hasil/<job_id>/`:
+Kontrak ini adalah satu-satunya kesepakatan bentuk data antara **pipeline (Dev 2)** dan **web/API (Dev 1)**. Kalau ada perubahan, ubah file ini lebih dulu, naikkan `schema_version`, baru ubah kode.
 
-| Berkas | Ditulis | Isi |
-|---|---|---|
-| `progress.json` | terus-menerus selama berjalan | keadaan lima tahap |
-| `hasil.json` | sekali, di akhir | transkrip dan kesimpulan |
-| `audio.wav` | tahap 1 | audio standar 16 kHz mono (bukan untuk pemutar web) |
-| `audio.json`, `stt.json`, `segmen.json` | tiap tahap selesai | hasil antar tahap untuk mulai ulang (lihat "Coba lagi") |
+## Aturan umum
 
-Menjalankan: `python -m spectrameet_pipeline.cli <audio> --job-id <id> [--language id-en|id|en] [--speakers auto|2|3|4|5+] [--resume]`.
-Kode keluar proses: `0` bila `hasil.json` tertulis, `1` bila tahap 1-4 gagal, `130` bila dibatalkan dengan Ctrl+C.
+1. Nama kunci memakai bahasa Inggris `snake_case`, kecuali isi ringkasan (`ringkasan`, `keputusan`, `tugas`, `pertanyaan_terbuka`) yang mengikuti tampilan di UI.
+2. Semua waktu dalam **detik** (angka desimal), dihitung dari awal audio.
+3. Teks isi memakai bahasa asli rekaman. Kunci tidak diterjemahkan.
+4. `speaker` selalu berupa ID stabil (`SPEAKER_00`, `SPEAKER_01`, ...). Nama tampilan ("Pembicara 1") ada di daftar `speakers`.
+5. Bidang yang bisa kosong ditulis `null`, bukan dihapus. Daftar kosong ditulis `[]`.
+6. `is_sample: true` hanya ada di berkas contoh. Pipeline sungguhan tidak mengisinya.
+7. Skema di Python didefinisikan dengan Pydantic (`pipeline/spectrameet_pipeline/schema.py`). Berkas ini mendokumentasikannya, dan tipe TypeScript dibuat otomatis dari OpenAPI. Kalau berbeda, Pydantic yang benar dan dokumen ini diperbaiki.
 
-## Coba lagi (`--resume`)
+## 1. Hasil akhir (`result`)
 
-Setiap tahap menyimpan hasilnya. Menjalankan perintah yang sama dengan `--resume` dan `--job-id` yang sama melewati tahap yang hasilnya masih berlaku, jadi kegagalan di tahap akhir tidak mengulang transkripsi yang makan beberapa menit. Diukur pada klip 5 menit: dari awal ±190 dtk, lanjut dari tahap 4 ±104 dtk, hanya ringkasan ±8 dtk.
+| Kunci | Tipe | Wajib | Keterangan |
+|---|---|---|---|
+| `schema_version` | string | ya | `"1.0"` |
+| `is_sample` | boolean | tidak | Hanya di contoh |
+| `meeting.id` | string | ya | ID meeting |
+| `meeting.title` | string | ya | Judul, boleh diubah pengguna |
+| `meeting.audio_file` | string | ya | Nama berkas audio asli |
+| `meeting.duration_sec` | number | ya | Durasi audio |
+| `meeting.language` | string | ya | Kode bahasa hasil deteksi, misalnya `id`, `en` |
+| `meeting.created_at` | string | ya | ISO 8601 dengan zona waktu |
+| `pipeline.whisper_model` | string | ya | Model suara-ke-teks yang dipakai |
+| `pipeline.diarization_model` | string | ya | Model identifikasi pembicara |
+| `pipeline.llm_model` | string | ya | Model ringkasan |
+| `pipeline.timings_sec` | object | ya | Waktu per tahap: `audio`, `vad`, `stt`, `diarization`, `summary` |
+| `speakers[]` | array | ya | `id` dan `label` |
+| `segments[]` | array | ya | `start`, `end`, `speaker`, `text`. Urut menurut `start` |
+| `summary.ringkasan` | string | ya | 2–4 kalimat |
+| `summary.keputusan[]` | array | ya | `text`, `timestamp_sec` |
+| `summary.tugas[]` | array | ya | `owner_speaker` (ID atau `null`), `text`, `due_text` (teks bebas atau `null`), `timestamp_sec` |
+| `summary.pertanyaan_terbuka[]` | array | ya | `text`, `timestamp_sec` |
+| `warnings[]` | array | ya | `code`, `message`, `at_sec` (boleh `null`) |
 
-- Hasil dipakai ulang hanya bila audio (jalur, ukuran, waktu ubah), bahasa, `WHISPER_MODEL`, `ALIGN`, dan (untuk tahap 4) jumlah pembicara tidak berubah. Bila ada yang berubah, tahap itu dan sesudahnya dihitung ulang. File checkpoint yang rusak dianggap tidak ada.
-- Tahap 5 (ringkasan) selalu dijalankan ulang saat `--resume`.
-- Tanpa `--resume`, semuanya dihitung dari awal dan checkpoint lama dibuang.
-- `progress.json` memuat `resumed_from`: tahap pertama yang benar-benar dihitung ulang (2, 4, atau 5). Tahap sebelumnya langsung `done`. Bernilai `null` pada pekerjaan baru.
-- Tombol "Coba lagi" di web = jalankan ulang perintah dengan `--resume`. Tombol "Proses ulang" (bila ada) = tanpa `--resume`.
+**Kode peringatan yang disepakati:** `OVERLAP_SPEECH` (suara tumpang tindih), `LOW_AUDIO_QUALITY`, `LANGUAGE_MIXED`, `SHORT_AUDIO`. Kode baru ditambahkan di sini lebih dulu.
 
+**Aturan isi:**
+- `owner_speaker: null` berarti penanggung jawab tidak jelas. UI menampilkan "Belum ditentukan".
+- `due_text` disimpan sebagai teks yang diucapkan ("Besok", "Rabu"). Mengubahnya menjadi tanggal dikerjakan di MVP 2.
+- Ringkasan tidak boleh memuat fakta yang tidak ada di transkrip. Aturan ini dijaga lewat prompt (milik PM).
 
-## progress.json
+## 2. Status job (`job`)
+
+Dipakai API untuk halaman Proses. Dicatat di tabel `jobs`.
 
 ```json
 {
-  "job_id": "abc123",
+  "id": "job_0001",
+  "meeting_id": "mtg_0001",
   "status": "running",
-  "step": 3,
-  "percent": 42.0,
-  "steps": [
-    {"id": 1, "name": "Menyiapkan audio",       "status": "done",    "started_at": 1760000000.1, "ended_at": 1760000000.4},
-    {"id": 2, "name": "Mendeteksi suara",       "status": "done",    "started_at": 1760000000.4, "ended_at": 1760000026.0},
-    {"id": 3, "name": "Mengubah suara ke teks", "status": "running", "started_at": 1760000026.0, "ended_at": null},
-    {"id": 4, "name": "Mengenali pembicara",    "status": "pending", "started_at": null, "ended_at": null},
-    {"id": 5, "name": "Menyusun kesimpulan",    "status": "pending", "started_at": null, "ended_at": null}
-  ],
-  "started_at": 1760000000.0,
-  "updated_at": 1760000031.2,
+  "stage": "stt",
+  "stage_index": 3,
+  "stage_total": 5,
+  "elapsed_sec": 214.0,
   "error": null
 }
 ```
 
-- `status` pekerjaan: `running`, `done`, `failed`. API cukup mengulang membaca berkas ini.
-- `step` adalah tahap yang sedang atau terakhir berjalan (1-5). `percent` 0-100 untuk tahap itu, hanya perkiraan.
-- `steps[].status`: `pending`, `running`, `done`, `skipped`, `failed`. Waktu dalam detik epoch; waktu berjalan = `now - started_at`.
-- Berkas selalu valid. Ia ditulis lewat berkas sementara lalu diganti, jadi pembaca tidak pernah melihat JSON setengah jadi. Bila membaca gagal sesaat di Windows, ulangi.
-- Tahap 2 (deteksi suara) berjalan bersama pemuatan model, jadi pada job pertama bisa memakan puluhan detik.
-
-### Proses yang mati mendadak
-
-Proses yang dihentikan paksa (mis. `terminate()` di Windows, atau laptop mati) tidak sempat menulis galat, sehingga `progress.json` tetap `running`. API sebaiknya menganggap pekerjaan mati bila proses sudah tidak ada, atau `updated_at` lebih dari 3 menit lalu (pemuatan model bisa diam sampai ±60 dtk). Setelah itu API boleh menawarkan "Coba lagi" (`--resume`).
-
-### Galat
-
-Bila `status` = `failed`, `error` terisi dan tahap terkait berstatus `failed`:
-
-```json
-{"code": "OUT_OF_MEMORY", "message": "Memori habis. Coba model Whisper lebih kecil di .env.", "step": 3, "detail": "teks teknis untuk log"}
-```
-
-`message` aman ditampilkan ke pengguna. `detail` hanya untuk log. `code` tetap:
-
-| Kode | Arti |
+| Kunci | Nilai |
 |---|---|
-| `AUDIO_NOT_FOUND` | file audio tidak ada |
-| `FFMPEG_MISSING` | FFmpeg belum terpasang |
-| `AUDIO_UNREADABLE` | audio rusak atau format tidak dikenali |
-| `HF_TOKEN_MISSING` | `HF_TOKEN` kosong |
-| `MODEL_UNAVAILABLE` | model tak bisa diunduh atau diakses (token, lisensi, atau jaringan) |
-| `OUT_OF_MEMORY` | memori habis |
-| `CANCELLED` | dihentikan pengguna (Ctrl+C) |
-| `UNKNOWN` | galat tak terduga |
+| `status` | `queued`, `running`, `done`, `failed` |
+| `stage` | `audio`, `vad`, `stt`, `diarization`, `summary` |
+| `stage_index` / `stage_total` | 1–5 dari 5 |
+| `elapsed_sec` | Waktu berjalan. **Tidak ada ETA** di MVP 1 karena belum bisa diprediksi andal |
+| `error` | `null`, atau objek di bawah |
 
-**Tahap 5 gagal tidak menggagalkan pekerjaan.** Transkrip tetap berguna, jadi `status` pekerjaan menjadi `done`, tahap 5 berstatus `failed`, dan `error` berisi alasannya dengan `step: 5`. Kode tahap 5: `LLM_AUTH`, `LLM_MODEL_NOT_FOUND`, `LLM_QUOTA`, `LLM_OVERLOADED` (Gemini sibuk; sudah dicoba ulang 3 kali otomatis), `LLM_UNREACHABLE`, `LLM_BAD_OUTPUT`, `LLM_FAILED`, `LLM_NOT_CONFIGURED`. Halaman Hasil sebaiknya menampilkan transkrip dan pesan galatnya, dengan tombol coba lagi untuk ringkasan.
-
-## hasil.json
+Objek `error` saat `failed`:
 
 ```json
 {
-  "version": 1,
-  "language": "id",
-  "duration": 312.4,
-  "segments": [{"start": 0.4, "end": 7.9, "speaker": "SPEAKER_00", "text": "..."}],
-  "summary_status": "ok",
-  "summary_error": null,
-  "summary": "...",
-  "decisions": ["..."],
-  "tasks": [{"description": "...", "owner": null, "due": null}],
-  "open_questions": ["..."]
+  "stage": "diarization",
+  "code": "HF_TOKEN_MISSING",
+  "message": "Token Hugging Face belum diisi di .env",
+  "log_tail": "baris terakhir log untuk ditampilkan di layar Gagal"
 }
 ```
 
-| Field | Tipe | Catatan |
+**Kode galat yang disepakati:** `AUDIO_UNREADABLE`, `FFMPEG_NOT_FOUND`, `HF_TOKEN_MISSING`, `MODEL_DOWNLOAD_FAILED`, `OUT_OF_MEMORY`, `LLM_AUTH_FAILED`, `LLM_TIMEOUT`, `LLM_BAD_OUTPUT`, `UNKNOWN`. Pesan harus bisa dipahami pengguna non-teknis; detail teknis masuk `log_tail`.
+
+## 3. Endpoint API
+
+| Metode | Path | Keterangan |
 |---|---|---|
-| `version` | angka | naik bila bentuk berubah |
-| `language` | teks | kode bahasa yang dipakai (`id`, `en`). Pilihan form "Indonesia + Inggris" diproses sebagai `id`. |
-| `duration` | angka | detik |
-| `segments[].start`, `end` | angka | detik dari awal audio. Dipakai untuk klik timestamp. Berurutan menurut `start`. |
-| `segments[].speaker` | teks | `SPEAKER_00`, `SPEAKER_01`, ... atau `UNKNOWN`. Hanya penanda suara yang sama, bukan nama orang. |
-| `segments[].text` | teks | tidak kosong |
-| `summary_status` | `ok` / `skipped` / `failed` | lihat bawah |
-| `summary_error` | teks atau null | alasan bila `skipped` atau `failed` |
-| `summary` | teks atau null | null bila status bukan `ok` |
-| `decisions`, `open_questions` | daftar teks | bisa kosong, itu normal |
-| `tasks[].description` | teks | |
-| `tasks[].owner`, `due` | teks atau null | null bila tidak disebut jelas di rekaman |
+| `POST` | `/meetings` | Unggah audio, buat meeting dan job (`queued`). Mengembalikan `meeting_id`, `job_id` |
+| `GET` | `/jobs/{job_id}` | Status job (bentuk di atas) |
+| `GET` | `/meetings/{id}/result` | Hasil akhir. `409` jika belum selesai |
+| `GET` | `/meetings/{id}/audio` | Berkas audio untuk pemutar |
 
-`summary_status`:
-- `ok`: ringkasan, keputusan, tugas, dan pertanyaan terisi (daftar boleh kosong).
-- `skipped`: tidak ada yang diringkas, yaitu `LLM_API_KEY` atau `LLM_MODEL` belum diisi, atau tidak ada ucapan terdeteksi. `summary` null.
-- `failed`: panggilan LLM gagal. `summary` null dan `summary_error` berisi alasannya.
+Format audio yang diterima di MVP 1: `wav`, `mp3`, `m4a`, `mp4` (diekstrak audionya). Batas ukuran awal: 500 MB (usulan, bisa diubah).
 
-## Hal yang perlu disepakati
+## 4. Perubahan kontrak
 
-1. **Nama field berbahasa Inggris** (`segments`, `summary`, `decisions`, `tasks`, `open_questions`) mengikuti pemberian nama di kode. Label di antarmuka tetap bahasa Indonesia. Setuju?
-2. **Nama pembicara** (rename) bukan bagian MVP 1, jadi `speaker` apa adanya.
-3. **Hasil per kata** (`words`) tidak dikeluarkan. Cukup per kalimat untuk MVP 1.
-4. **Batalkan**: pipeline mencatat `CANCELLED` bila menerima Ctrl+C (`KeyboardInterrupt`). `Popen.terminate()` di Windows tidak bisa ditangkap, jadi untuk tombol Batalkan, API yang menulis `failed` dengan kode `CANCELLED` setelah menghentikan proses. Perlu disepakati dengan Dev 1.
+1. Usul perubahan ditulis di Pull Request yang mengubah berkas ini.
+2. Dev 1 dan Dev 2 sama-sama menyetujui.
+3. Perubahan yang menghapus atau mengganti nama kunci menaikkan versi mayor (`2.0`). Penambahan kunci opsional menaikkan versi minor (`1.1`).
+
+## Persetujuan
+
+| Peran | Nama | Setuju | Tanggal |
+|---|---|---|---|
+| PM | | | |
+| Dev 1 | | | |
+| Dev 2 | | | |
