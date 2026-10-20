@@ -24,6 +24,8 @@ next-env.d.ts
 .DS_Store
 Thumbs.db
 
-# DOkumentasi non GH 
-.pdf
-SpectraMeet-MVP1-Rencana.pdf
+# Dokumentasi non GH: semua PDF (laporan lama yang sudah ter-commit tetap dilacak)
+*.pdf
+
+# Rekaman uji: berisi suara orang, jangan masuk git. Bagikan lewat drive tim.
+docs/uji/rekaman/
