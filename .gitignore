@@ -29,3 +29,6 @@ Thumbs.db
 
 # Rekaman uji: berisi suara orang, jangan masuk git. Bagikan lewat drive tim.
 docs/uji/rekaman/
+
+# Transkrip rapat nyata dari uji audio besar: berisi isi dan nama pihak lain, jangan masuk repo publik.
+docs/laporan/transkrip-uji-besar/
